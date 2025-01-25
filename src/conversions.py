@@ -1,3 +1,4 @@
+import re
 from textnode import TextType, TextNode
 from htmlnode import LeafNode
 
@@ -19,4 +20,44 @@ def text_node_to_html_node(text_node):
             raise Exception("Wrong text type")
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
-    pass
+    new_nodes = []
+
+    for old_node in old_nodes:
+        if old_node.text == "":
+            continue
+        if old_node.text_type != TextType.NORMAL and old_node.text.split(delimiter)[0] != "":
+            new_nodes.append(old_node)
+            continue
+        if not delimiter in old_node.text and old_node.text.split(delimiter)[0] != "":
+            new_nodes.append(old_node)
+            continue
+        splitted = old_node.text.split(delimiter, maxsplit=2)
+        if len(splitted) == 2:
+            raise Exception("Parsing error, no matching delimiter")
+        if len(splitted) == 1:
+            new_nodes.append(old_node)
+            continue
+        if splitted[0] != "":
+            new_nodes.append(TextNode(splitted[0], TextType.NORMAL))
+        new_nodes.append(TextNode(splitted[1], text_type))
+        new_nodes.extend(split_nodes_delimiter([TextNode(splitted[2], TextType.NORMAL)], delimiter, text_type))
+    return new_nodes
+
+def extract_markdown_images(text):
+    result = []
+    if isinstance(text, str):
+        matches = re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
+        if matches:
+            for m in matches:
+                result.append(m)
+    return result
+
+def extract_markdown_links(text):
+    result = []
+    if isinstance(text, str):
+        matches = re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
+        if matches:
+            for m in matches:
+                result.append(m)
+    return result
+
