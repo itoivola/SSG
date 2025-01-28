@@ -1,6 +1,6 @@
 import unittest
 
-from conversions import extract_markdown_images, extract_markdown_links, text_node_to_html_node, split_nodes_delimiter
+from conversions import extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_node_to_html_node, split_nodes_delimiter, text_to_textnodes
 from textnode import TextNode, TextType
 from htmlnode import LeafNode
 
@@ -140,6 +140,118 @@ class TestRegexImgLinks(unittest.TestCase):
         linktext = []
         result = extract_markdown_links(linktext)
         expected = []
+        self.assertEqual(result, expected)
+
+class TestImages(unittest.TestCase):
+    def test_img(self):
+        input = [
+                TextNode("Hello ![cat](cat.jpg) world ![dog](dog.jpg) end", TextType.NORMAL)
+            ]
+        result = split_nodes_image(input)
+        expected = [
+                TextNode("Hello ", TextType.NORMAL),
+                TextNode("cat", TextType.IMAGE, url="cat.jpg"),
+                TextNode(" world ", TextType.NORMAL),
+                TextNode("dog", TextType.IMAGE, url="dog.jpg"),
+                TextNode(" end", TextType.NORMAL)
+            ]
+        self.assertEqual(result, expected)
+
+    def test_img2(self):
+        input = [
+                TextNode("![cat](cat.jpg) ![dog](dog.jpg)", TextType.NORMAL)
+            ]
+        result = split_nodes_image(input)
+        expected = [
+                TextNode("cat", TextType.IMAGE, url="cat.jpg"),
+                TextNode(" ", TextType.NORMAL),
+                TextNode("dog", TextType.IMAGE, url="dog.jpg"),
+            ]
+        self.assertEqual(result, expected)
+
+    def test_img3(self):
+        input = [
+                TextNode("Hello ![cat](cat.jpg)", TextType.NORMAL)
+            ]
+        result = split_nodes_image(input)
+        expected = [
+                TextNode("Hello ", TextType.NORMAL),
+                TextNode("cat", TextType.IMAGE, url="cat.jpg"),
+            ]
+        self.assertEqual(result, expected)
+
+    def test_img4(self):
+        input = [
+                TextNode("![cat](cat.jpg)![dog](dog.jpg)", TextType.NORMAL)
+            ]
+        result = split_nodes_image(input)
+        expected = [
+                TextNode("cat", TextType.IMAGE, url="cat.jpg"),
+                TextNode("dog", TextType.IMAGE, url="dog.jpg"),
+            ]
+        self.assertEqual(result, expected)
+
+    def test_img5(self):
+        input = [
+                TextNode("Just a text", TextType.NORMAL)
+            ]
+        result = split_nodes_image(input)
+        expected = [
+                TextNode("Just a text", TextType.NORMAL)
+            ]
+        self.assertEqual(result, expected)
+
+
+    def test_img6(self):
+        input = [
+            TextNode("Hello ![cat](cat.jpg) world ![dog](dog.jpg) end", TextType.NORMAL),
+            TextNode("This is text with a ", TextType.NORMAL, None),
+            TextNode("bold", TextType.BOLD, None),
+            TextNode(" word", TextType.NORMAL, None),
+            ]
+        result = split_nodes_image(input)
+        expected = [
+            TextNode("Hello ", TextType.NORMAL),
+            TextNode("cat", TextType.IMAGE, url="cat.jpg"),
+            TextNode(" world ", TextType.NORMAL),
+            TextNode("dog", TextType.IMAGE, url="dog.jpg"),
+            TextNode(" end", TextType.NORMAL),
+            TextNode("This is text with a ", TextType.NORMAL, None),
+            TextNode("bold", TextType.BOLD, None),
+            TextNode(" word", TextType.NORMAL, None),
+            ]
+        self.assertEqual(result, expected)
+
+class TestLinks(unittest.TestCase):
+    def test_link(self):
+        input = [
+                TextNode("This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)", TextType.NORMAL)
+            ]
+        result = split_nodes_link(input)
+        expected = [
+                TextNode("This is text with a link ", TextType.NORMAL),
+                TextNode("to boot dev", TextType.LINK, url="https://www.boot.dev"),
+                TextNode(" and ", TextType.NORMAL),
+                TextNode("to youtube", TextType.LINK, url="https://www.youtube.com/@bootdotdev")
+            ]
+        self.assertEqual(result, expected)
+
+class TextToTextNodes(unittest.TestCase):
+    def test_all(self):
+        input = "This is **text** with an *italic* word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)" 
+        result = text_to_textnodes(input)
+        expected = [
+                TextNode("This is ", TextType.NORMAL),
+                TextNode("text", TextType.BOLD),
+                TextNode(" with an ", TextType.NORMAL),
+                TextNode("italic", TextType.ITALIC),
+                TextNode(" word and a ", TextType.NORMAL),
+                TextNode("code block", TextType.CODE),
+                TextNode(" and an ", TextType.NORMAL),
+                TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+                TextNode(" and a ", TextType.NORMAL),
+                TextNode("link", TextType.LINK, "https://boot.dev"),
+        ]
         self.assertEqual(result, expected)
 
 
