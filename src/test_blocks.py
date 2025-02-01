@@ -1,9 +1,6 @@
 import unittest
 
-from conversions import extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_node_to_html_node, split_nodes_delimiter, text_to_textnodes
-from textnode import TextNode, TextType
-from htmlnode import LeafNode
-from blocks import markdown_to_blocks
+from blocks import markdown_to_blocks, block_to_block_type
 
 
 
@@ -57,3 +54,50 @@ class TestTextToBlock2(unittest.TestCase):
                 'asflksafjsaf\njskalfjalkfs\nalskfjlsakf'
             ]
         self.assertEqual(result, expected)
+
+class BlockToBlockType(unittest.TestCase):
+    def test_code(self):
+        text = """```1. TEST1
+2. TEST2
+3. TEST3
+5. TEST5```"""
+
+        result = block_to_block_type(text)
+        expected = "code"
+        self.assertEqual(result, expected)
+
+    def test_quote(self):
+        text = """>1. TEST1
+>2. TEST2
+>3. TEST3
+>5. TEST5"""
+
+        result = block_to_block_type(text)
+        expected = "quote"
+        self.assertEqual(result, expected)
+
+    def test_ul(self):
+        text = """* TEST1
+* TEST2
+* TEST3
+* TEST5"""
+
+        result = block_to_block_type(text)
+        expected = "unordered list"
+        self.assertEqual(result, expected)
+
+    def test_ol(self):
+        text = """1. TEST1
+2. TEST2
+3. TEST3
+4. TEST5"""
+
+        result = block_to_block_type(text)
+        expected = "ordered list"
+        self.assertEqual(result, expected)
+
+print(block_to_block_type("""```1. TEST1
+2. TEST2
+3. TEST3
+5. TEST5```"""))
+
